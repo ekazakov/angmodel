@@ -10,6 +10,12 @@ export default  {
 
     _cache: new Map([['$rootScope', new Scope()]]),
 
+    _reset () {
+        this._cache = new Map([['$rootScope', new Scope()]]);
+        this._providers = new Map();
+        return this;
+    },
+
     directive (name, fn) {
         this._register(name + DIRECTIVE_SUFFIX, fn);
     },
@@ -22,8 +28,8 @@ export default  {
         this._register(name, fn);
     },
 
-    get (namae, locals) {
-        if (this._cache.has(name)) return this._cache.get(namae);
+    get (name, locals) {
+        if (this._cache.has(name)) return this._cache.get(name);
         const provider = this._providers.get(name);
         if (provider == null || typeof provider !== 'function') return null;
         this._cache.set(name, this.invoke(provider, locals));
@@ -40,11 +46,12 @@ export default  {
     },
 
     annotate (fn) {
-        const comments = RegExp('((\/\/.*$)|(\/\*[\s\S]*?\*\/))', 'mg');
-        const fnParams = RegExp('\((.*?)\)');
+        const comments = new RegExp(/(\/\/.*$)|(\/\*[\s\S]*\*\/)/, 'mg');
+        const fnParams = new RegExp(/\((.*)\)\s*\{/);
         const params = fn.toString()
             .replace(comments, '')
-            .match((fnParams))
+                //.replace(/(\s+)/ig, '')
+            .match(fnParams)
         ;
 
         if (params && params[1]) {

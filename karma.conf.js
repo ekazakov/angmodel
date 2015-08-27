@@ -1,11 +1,13 @@
 'use strict'
 
 var webpack = require('webpack');
+//var babelify = require('babelify');
 
 module.exports = function(config) {
     config.set({
         plugins: [
             require('karma-webpack'),
+            //require('karma-browserify'),
             require('karma-tap'),
             require('karma-chrome-launcher'),
             require('karma-phantomjs-launcher'),
@@ -15,11 +17,27 @@ module.exports = function(config) {
 
         basePath: '',
         frameworks: [ 'tap' ],
-        files: [ 'test/**/*.js' ],
+        files: [ 'test/index.js' ],
 
         preprocessors: {
-            'test/**/*.js': [ 'webpack' ]
+            'test/index.js': [ 'webpack' ]
+            //'test/index.js': [ 'browserify' ]
         },
+
+        /*browserify: {
+            debug: true,
+            transform: [
+                babelify.configure({
+                    blacklist: ["strict"]
+                })
+            ],
+            configure: function (bundle) {
+                bundle.on('bundled', function (error) {
+                    if (error != null)
+                        console.error(error.message);
+                });
+            }
+        },*/
 
         webpack: {
             node : {
@@ -31,7 +49,10 @@ module.exports = function(config) {
                     {
                         test: /\.js$/,
                         exclude: /node_modules/,
-                        loaders: ["babel-loader"]
+                        loader: "babel-loader",
+                        query: {
+                            blacklist: ["strict"]
+                        }
                     }
                 ]
             },

@@ -1,8 +1,6 @@
 'use strict'
 
 import Provider from './provider.js';
-import DIRECTIVE_SUFFIX from './provider.js';
-
 
 export default {
     bootstrap () {
@@ -16,8 +14,10 @@ export default {
         directiveDescriptors.forEach(descriptor => {
             const directive = Provider.getDirective(descriptor.name);
 
+            if (directive == null) return;
+
             if (directive.scope && !scopeCreated) {
-                scope = scope.$new();
+                scope = scope.$new(Provider.get('$rootScope'));
                 scopeCreated = true;
             }
 
@@ -30,6 +30,15 @@ export default {
     },
 
     _getElDirectives (el) {
+        const attrs = [...el.attributes];
+        const result = [];
 
+        for (attr of attrs) {
+            if (Provider.getDirective(attr.name)) {
+                result.push({name: attr.name, value: attr.value});
+            }
+        }
+
+        return result;
     }
 }
