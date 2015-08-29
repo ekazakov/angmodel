@@ -2,26 +2,25 @@
 import scopeFactory from './scope-factory.js';
 
 export default class DomCompiler {
-    constructor (provider) {
-        this.provider = provider;
+    constructor ($provider, $rootScope, $scopeFactory) {
+        Object.assign(this, {$provider, $rootScope, $scopeFactory});
     }
 
     bootstrap (root) {
-        this.compile(root, provider.get('$rootScope'));
+        this.compile(root, this.$rootScope);
     }
 
     compile (el, scope) {
-        const $scopeFactory = this.provider.get('$scopeFactory');
         const directiveDescriptors = this._getElDirectives(el);
         let scopeCreated = false;
 
         directiveDescriptors.forEach(descriptor => {
-            const directive = this.provider.getDirective(descriptor.name);
+            const directive = this.$provider.getDirective(descriptor.name);
 
             if (directive == null) return;
 
             if (directive.scope && !scopeCreated) {
-                scope = $scopeFactory(scope);//scope.$new(this.$rootScope);
+                scope = this.$scopeFactory(scope);
                 scopeCreated = true;
             }
 
@@ -38,7 +37,7 @@ export default class DomCompiler {
         const result = [];
 
         for (attr of attrs) {
-            if (this.provider.getDirective(attr.name)) {
+            if (this.$provider.getDirective(attr.name)) {
                 result.push({name: attr.name, value: attr.value});
             }
         }

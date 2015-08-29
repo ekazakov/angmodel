@@ -31,12 +31,16 @@ function setup () {
     provider.service('$rootScope', () => $rootScope);
     provider.service('$scopeFactory', scopeFactory);
     provider.service('$counter', () => counter);
+    provider.service('$provider', () => provider);
+    provider.service('$domCompiler', ($provider, $rootScope, $scopeFactory) => {
+        return new DomCompiler($provider, $rootScope, $scopeFactory);
+    });
 
     return {
         provider,
         $rootScope,
         counter,
-        domCompiler: new DomCompiler(provider)
+        domCompiler: provider.get('$domCompiler')
     };
 }
 

@@ -15,9 +15,14 @@ function setup () {
     const provider = new Provider();
     const $rootScope = new Scope();
     const counter = new Counter();
+
     provider.service('$rootScope', () => $rootScope);
     provider.service('$scopeFactory', scopeFactory);
     provider.service('$counter', () => counter);
+    provider.service('$provider', () => provider);
+    provider.service('$domCompiler', ($provider, $rootScope, $scopeFactory) => {
+        return new DomCompiler($provider, $rootScope, $scopeFactory);
+    });
 
     Object.keys(directives).forEach((dirName) => {
         provider.directive(dirName, directives[dirName](provider));
@@ -27,7 +32,7 @@ function setup () {
         provider,
         $rootScope,
         counter,
-        domCompiler: new DomCompiler(provider)
+        domCompiler: provider.get('$domCompiler')
     };
 }
 
