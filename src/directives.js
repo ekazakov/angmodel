@@ -3,18 +3,18 @@
 import Provider from './provider.js';
 
 export default {
-    'ngl-bind': function nglBind () {
-        return {
+    'ngl-bind': function nglBind (provider) {
+        return () => ({
             scope: false,
             link: function (el, scope, exp) {
                 el.innerHTML = scope.$eval(exp);
                 scope.$watch(exp, (val) => el.innerHTML = val);
             }
-        };
+        })
     },
 
-    'ngl-model': function nglModel () {
-        return {
+    'ngl-model': function nglModel (provider) {
+        return () => ({
             link: function (el, scope, exp) {
                 el.addEventListener('input', () => {
                     scope[exp] = el.value;
@@ -23,21 +23,21 @@ export default {
 
                 scope.$watch(exp, (val) => el.value = val);
             }
-        };
+        })
     },
 
-    'ngl-controller': function nglBind () {
-        return {
+    'ngl-controller': function nglBind (provider) {
+        return () => ({
             scope: true,
             link: function (el, scope, exp) {
-                const ctrl = Provider.getController(exp);
-                Provider.invoke(ctrl, {$scope: scope});
+                const ctrl = provider.getController(exp);
+                provider.invoke(ctrl, {$scope: scope});
             }
-        };
+        })
     },
 
-    'ngl-click': function nglClick () {
-        return {
+    'ngl-click': function nglClick (provider) {
+        return () => ({
             scope: false,
             link: function (el, scope, exp) {
                 el.onclick = function () {
@@ -45,7 +45,7 @@ export default {
                     scope.$apply();
                 };
             }
-        };
+        })
     }
 
 }

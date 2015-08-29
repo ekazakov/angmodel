@@ -1,24 +1,33 @@
 'use strict'
 
-import test from 'tape';
+import tape from 'tape';
 import DomBuilder from 'DOMBuilder';
-
-import {resetCounter} from '../src/scope.js';
-import Scope from '../src/scope.js';
-import Provider from '../src/provider.js';
-import directives from '../src/directives.js';
 import DomCompiler from '../src/dom-compiler.js';
+import Provider from '../src/provider';
+import Scope from '../src/scope.js';
+import Counter from '../src/counter.js'
+import scopeFactory from '../src/scope-factory.js';
+import directives from '../src/directives.js';
 
+const test = tape;
 
-function compilerHarness (fn) {
-    return function (t) {
-        resetCounter();
-        Provider._reset();
-        Object.keys(directives).forEach((dirName) => {
-            Provider.directive(dirName, directives[dirName]);
-        });
-        fn(t);
-        t.end();
+function setup () {
+    const provider = new Provider();
+    const $rootScope = new Scope();
+    const counter = new Counter();
+    provider.service('$rootScope', () => $rootScope);
+    provider.service('$scopeFactory', scopeFactory);
+    provider.service('$counter', () => counter);
+
+    Object.keys(directives).forEach((dirName) => {
+        provider.directive(dirName, directives[dirName](provider));
+    });
+
+    return {
+        provider,
+        $rootScope,
+        counter,
+        domCompiler: new DomCompiler(provider)
     };
 }
 
@@ -29,25 +38,26 @@ function dom (dom) {
     return root.children[0];
 }
 
-test.test('============ Direcitrve ngl-click', compilerHarness(t => {
+test('============ Direcitrve ngl-click', (t) => {
+    const {provider, domCompiler, $rootScope} = setup();
     const root = dom(['div', {style: 'background: #fff; padding: 10px;', 'ngl-controller': 'FooCtrl'},
         ['button', {'ngl-click': 'foo()'}, 'Increment'],
         ['span', {'ngl-bind': 'bar'}, '0'],
     ]);
 
-    const rootScope = Provider.get('$rootScope')
-
-    Provider.controller('FooCtrl', function FooCtrl ($scope) {
+    provider.controller('FooCtrl', function FooCtrl ($scope) {
         $scope.bar = 0;
         $scope.foo = () => {
             $scope.bar++;
         }
 
-        $scope.$watch('bar', (val) => t.equal(val, 1));
+        $scope.$watch('bar', (val) => {
+            t.equal(val, 1);
+            t.end();
+        });
     });
 
-
     document.body.appendChild(root);
-    DomCompiler.compile(root, rootScope);
+    domCompiler.compile(root, $rootScope);
     document.querySelector('button').dispatchEvent(new Event('click'));
-}));
+});

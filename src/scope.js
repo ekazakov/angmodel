@@ -1,19 +1,18 @@
 import Utils from './utils.js';
-//import Provider from './provider.js';
 
-let counter = 0;
-
-function incCounter () {
-    counter++;
-}
-
-export function getCounter () {
-    return counter;
-}
-
-export function resetCounter () {
-    counter = 0;
-}
+//let counter = 0;
+//
+//function incCounter () {
+//    counter++;
+//}
+//
+//export function getCounter () {
+//    return counter;
+//}
+//
+//export function resetCounter () {
+//    counter = 0;
+//}
 
 export default class Scope {
     constructor(parent, rootScope, id = 0) {
@@ -34,6 +33,10 @@ export default class Scope {
         });
     }
 
+    addChild (childScope) {
+        this.$$children.push(childScope);
+    }
+
     $destroy () {
         const children = this.$parent.$$children;
         children.splice(children.indexOf(this), 1);
@@ -51,16 +54,6 @@ export default class Scope {
                 return;
             }
         }
-    }
-
-    $new (rootScope) {
-        incCounter();
-        const id = getCounter();
-        const obj = new Scope(this, rootScope, id);
-        Object.setPrototypeOf(obj, this);
-        this.$$children.push(obj);
-
-        return obj;
     }
 
     $digest () {

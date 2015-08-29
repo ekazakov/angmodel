@@ -1,32 +1,33 @@
 "use strict";
 
-import Scope from './scope.js';
+//import Scope from './scope.js';
 
 export const DIRECTIVE_SUFFIX = 'Directive';
 export const CONTROLLER_SUFFIX = 'Controller';
 
-export default  {
-    _providers: new Map(),
-
-    _cache: new Map([['$rootScope', new Scope()]]),
+export default class Provider {
+    constructor(cache = new Map()) {
+        this._providers = new Map();
+        this._cache = cache;//new Map([['$rootScope', new Scope()]]),
+    }
 
     _reset () {
-        this._cache = new Map([['$rootScope', new Scope()]]);
+        this._cache = new Map();
         this._providers = new Map();
         return this;
-    },
+    }
 
     directive (name, fn) {
         this._register(name + DIRECTIVE_SUFFIX, fn);
-    },
+    }
 
     controller (name, fn) {
         this._register(name + CONTROLLER_SUFFIX, () => fn);
-    },
+    }
 
     service (name, fn) {
         this._register(name, fn);
-    },
+    }
 
     get (name, locals) {
         if (this._cache.has(name)) return this._cache.get(name);
@@ -35,15 +36,15 @@ export default  {
         this._cache.set(name, this.invoke(provider, locals));
 
         return this._cache.get(name);
-    },
+    }
 
     getDirective (name, locals) {
         return this.get(name + DIRECTIVE_SUFFIX, locals);
-    },
+    }
 
     getController (name, locals) {
         return this.get(name + CONTROLLER_SUFFIX, locals);
-    },
+    }
 
     annotate (fn) {
         const comments = new RegExp(/(\/\/.*$)|(\/\*[\s\S]*\*\/)/, 'mg');
@@ -62,7 +63,7 @@ export default  {
         }
 
         return [];
-    },
+    }
 
     invoke (fn, locals = {}) {
         const deps = this
@@ -71,7 +72,7 @@ export default  {
                 locals[dependency] || this.get(dependency, locals));
 
         return fn.apply(null, deps);
-    },
+    }
 
     _register (name, factory) {
         this._providers.set(name, factory);

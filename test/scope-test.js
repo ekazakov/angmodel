@@ -3,13 +3,13 @@
 import test from 'tape';
 
 import Scope from '../src/scope.js';
-import {getCounter, resetCounter} from '../src/scope.js';
+import Provider from '../src/provider.js';
+import Counter from '../src/counter.js';
 
 function noop () {}
 
 function scopeHarnes (fn) {
     return function (t) {
-        resetCounter();
         fn(t);
         t.end();
     }
@@ -70,9 +70,18 @@ test.test('Scope $digest', scopeHarnes(t => {
     rootScope.$digest();
 }));
 
-test.test('Child scope', scopeHarnes(t => {
+import scopeFactory from '../src/scope-factory.js';
+
+test.test('Scope factory', scopeHarnes(t => {
     const rootScope = new Scope();
-    const childScope = rootScope.$new();
+    const provider = new Provider();
+    const couter = new Counter();
+    provider.service('$rootScope', () => rootScope);
+    provider.service('$counter', () => couter);
+    provider.service('scopeFactory', scopeFactory);
+
+    const sFactory = provider.get('scopeFactory');
+    const childScope = sFactory(rootScope);
 
     rootScope.x = 1;
     childScope.y = 2;
@@ -83,5 +92,5 @@ test.test('Child scope', scopeHarnes(t => {
     rootScope.x++;
     childScope.y++;
 
-    rootScope.$digest();
+    childScope.$apply();
 }));

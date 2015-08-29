@@ -1,54 +1,39 @@
 'use strict'
 
-import test from 'tape';
+import tape from 'tape';
 import Provider from '../src/provider';
+import Counter from '../src/counter.js';
 
-const setup = () => {
-    return Provider._reset();
-}
-
-const teardown = () => {
-    return Provider._reset();
-}
+const test = tape.test;
 
 function providerHarnes (cb) {
     return function (t) {
-        const Provider = setup();
+        cb(t);
 
-        cb(t, Provider);
-
-        teardown();
         t.end();
     };
 }
 
-test.test('annotate', {skip: true}, providerHarnes((t, Provider) => {
-    function FooService (foo1,
-     /*fdf*/ foo2,
-    //sdfsf
-     foo3
-    ) { }
-
-    t.deepEqual(Provider.annotate(FooService), ['foo1', 'foo2', 'foo3']);
-}));
-
-test.test('Provider register service', providerHarnes((t, Provider) => {
+test('Provider register service', providerHarnes((t) => {
+    const provider = new Provider();
     function FooService () {
         return {x: 1};
     }
-    Provider.service('foo', FooService);
-    t.equal(Provider._providers.get('foo'), FooService);
+    provider.service('foo', FooService);
+    t.equal(provider._providers.get('foo'), FooService);
 }));
 
-test.test('Provider get service', providerHarnes((t, Provider) => {
-    function FooService () {
-        return {x: 1};
-    }
-    Provider.service('foo', FooService);
-    t.deepEqual(Provider.get('foo'), {x: 1});
+test('Provider get service', providerHarnes((t) => {
+    function FooService () { return {x: 1}; }
+    const provider = new Provider();
+
+    provider.service('foo', FooService);
+    t.deepEqual(provider.get('foo'), {x: 1});
 }));
 
-test.test('Provider get service with dependencies', providerHarnes((t, Provider) => {
+test('Provider get service with dependencies', providerHarnes((t) => {
+    const provider = new Provider();
+
     function FooService () {
         return {x: 1};
     }
@@ -57,13 +42,23 @@ test.test('Provider get service with dependencies', providerHarnes((t, Provider)
         return Object.assign({y: 2}, foo);
     }
 
-    Provider.service('foo', FooService);
-    Provider.service('bar', BarService);
-    t.deepEqual(Provider.get('bar'), {x: 1, y: 2});
+    provider.service('foo', FooService);
+    provider.service('bar', BarService);
+    t.deepEqual(provider.get('bar'), {x: 1, y: 2});
 }));
 
-//test.test('Register service', t => { t.end(); });
-//test.test('Register service', t => { t.end(); });
-//test.test('Register service', t => { t.end(); });
-//test.test('Register service', t => { t.end(); });
-//test.test('Register service', t => { t.end(); });
+test('Provider instaniate counter class', (t) => {
+    const provider = new Provider();
+    provider.service('counter', () => new Counter());
+
+    const counter = provider.get('counter');
+    counter.increase();
+    t.equal(counter.getValue(), 1);
+    t.end();
+});
+
+//test('Register service', t => { t.end(); });
+//test('Register service', t => { t.end(); });
+//test('Register service', t => { t.end(); });
+//test('Register service', t => { t.end(); });
+//test('Register service', t => { t.end(); });
